@@ -23,12 +23,8 @@
     "ethereumjs-util"
   ],
   "devDependencies": {
-<<<<<<< HEAD
     "@semantic-release/git": "^9.0.0",
     "ganache-core": "2.13.2",
-=======
-    "@celo/ganache-core": "https://github.com/celo-org/ganache-core.git#f771ee4",
->>>>>>> 816a475... Use HTTPS instead of SSH for ganache-core (#14)
     "js-scrypt": "0.2.0",
     "node-loader": "^0.6.0",
     "notp": "2.0.3",
