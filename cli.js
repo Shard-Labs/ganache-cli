@@ -81,7 +81,6 @@ var options = {
   blockTime: argv.b,
   gasPrice: argv.g,
   gasLimit: argv.l,
-  callGasLimit: argv.callGasLimit,
   accounts: parseAccounts(argv.account),
   unlocked_accounts: argv.unlock,
   fork: argv.f,
@@ -91,7 +90,6 @@ var options = {
   verbose: argv.v,
   secure: argv.n,
   db_path: argv.db,
-  hd_path: argv.hdPath,
   account_keys_path: argv.account_keys_path,
   vmErrorsOnRPCResponse: !argv.noVMErrorsOnRPCResponse,
   logger: logger,
@@ -214,17 +212,11 @@ function startGanache(err, result) {
     console.log(options.gasLimit);
   }
 
-  if (options.callGasLimit) {
-    console.log("");
-    console.log("Call Gas Limit");
-    console.log("==================");
-    console.log(options.callGasLimit);
-  }
-
   if (options.fork) {
     console.log("");
     console.log("Forked Chain");
     console.log("==================");
+<<<<<<< HEAD
     console.log("Location:       " + state.blockchain.options.fork);
     console.log("Block:          " + to.number(state.blockchain.forkBlockNumber));
     console.log("Network ID:     " + state.net_version);
@@ -236,6 +228,12 @@ function startGanache(err, result) {
       maxCacheSize = options.forkCacheSize + " bytes";
     }
     console.log("Max Cache Size: " + maxCacheSize);
+=======
+    console.log("Location:    " + fork_address);
+    console.log("Block:       " + to.number(state.blockchain.fork_block_number));
+    console.log("Network ID:  " + state.net_version);
+    console.log("Time:        " + (state.blockchain.startTime || new Date()).toString());
+>>>>>>> 629e4d9... Revert "Updating from upstream to support Istanbul"
   }
 
   console.log("");

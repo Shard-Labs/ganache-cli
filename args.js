@@ -70,8 +70,8 @@ module.exports = exports = function(yargs, version, isDocker) {
       group: 'Chain:',
       alias: 'hardfork',
       type: 'string',
-      describe: "Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, `petersburg`, `istanbul` and `muirGlacier` (default).",
-      default: "muirGlacier"
+      describe: "Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, and `petersburg` (default).",
+      default: "petersburg"
     })
     .option('f', {
       group: 'Chain:',
@@ -101,13 +101,6 @@ module.exports = exports = function(yargs, version, isDocker) {
       defaultDescription: "Random value, unless -d is specified",
       conflicts: 'd',
       demandOption: false
-    })
-    .option('hdPath', {
-        group: 'Accounts:',
-        alias: 'hd_path',
-        describe: `The hierarchical deterministic path to use when generating accounts. Default: "m/44'/60'/0'/0/"`,
-        type: 'string',
-        demandOption: false
     })
     .option('d', {
       group: 'Chain:',
@@ -166,12 +159,6 @@ module.exports = exports = function(yargs, version, isDocker) {
       describe: 'The block gas limit in wei',
       type: 'number',
       default: 0x6691b7
-    })
-    .option('callGasLimit', {
-      group: 'Chain:',
-      describe: 'Sets the transaction gas limit for `eth_call` and `eth_estimateGas` calls. Must be specified as a hex string. Defaults to "0x1fffffffffffff" (Number.MAX_SAFE_INTEGER)',
-      type: 'number',
-      default: 0x1fffffffffffff
     })
     .option('allowUnlimitedContractSize', {
       group: 'Chain:',
