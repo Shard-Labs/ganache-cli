@@ -84,6 +84,19 @@ module.exports = exports = function (yargs, version, isDocker) {
         "Fork from another currently running Ethereum client at a given block. Input should be the HTTP location and port of the other client, e.g. 'http://localhost:8545' or optionally provide a block number 'http://localhost:8545@1599200'",
       default: false,
     })
+    .option('forkCacheSize', {
+      group: 'Chain:',
+      type: 'number',
+      describe:
+        'The maximum size, in bytes, of the in-memory cache for queries on a chain fork. Defaults to `1_073_741_824` bytes (1 gigabyte). You can set this to `0` to disable caching (not recommended), or to `-1` for unlimited (will be limited by your node process).',
+      default: 1073741824,
+    })
+    .option('forkCacheSize', {
+      group: 'Chain:',
+      type: 'number',
+      describe: "The maximum size, in bytes, of the in-memory cache for queries on a chain fork. Defaults to `1_073_741_824` bytes (1 gigabyte). You can set this to `0` to disable caching (not recommended), or to `-1` for unlimited (will be limited by your node process).",
+      default: 1073741824
+    })
     .option('db', {
       group: 'Chain:',
       describe: "Directory of chain database; creates one if it doesn't exist",
@@ -105,6 +118,13 @@ module.exports = exports = function (yargs, version, isDocker) {
       describe: 'Arbitrary data to generate the HD wallet mnemonic to be used',
       defaultDescription: 'Random value, unless -d is specified',
       conflicts: 'd',
+      demandOption: false,
+    })
+    .option('hdPath', {
+      group: 'Accounts:',
+      alias: 'hd_path',
+      describe: `The hierarchical deterministic path to use when generating accounts. Default: "m/44'/60'/0'/0/"`,
+      type: 'string',
       demandOption: false,
     })
     .option('d', {
@@ -147,6 +167,21 @@ module.exports = exports = function (yargs, version, isDocker) {
       defaultDescription: 'System time at process start or Network ID of forked blockchain if configured.',
       demandOption: false,
     })
+    .option('chainId', {
+      group: 'Chain:',
+      type: 'number',
+      describe: 'The Chain ID ganache-cli will use for `eth_chainId` RPC and the `CHAINID` opcode.',
+      defaultDescription:
+        'For legacy reasons, the default is currently `1337` for `eth_chainId` RPC and `1` for the `CHAINID` opcode. This will be fixed in the next major version of ganache-cli and ganache-core!',
+      demandOption: false,
+    })
+    .option('chainId', {
+      group: 'Chain:',
+      type: 'number',
+      describe: "The Chain ID ganache-cli will use for `eth_chainId` RPC and the `CHAINID` opcode.",
+      defaultDescription: "For legacy reasons, the default is currently `1337` for `eth_chainId` RPC and `1` for the `CHAINID` opcode. This will be fixed in the next major version of ganache-cli and ganache-core!",
+      demandOption: false
+    })
     .option('g', {
       group: 'Chain:',
       alias: 'gasPrice',
@@ -167,6 +202,13 @@ module.exports = exports = function (yargs, version, isDocker) {
       describe: 'The block gas limit in wei',
       type: 'number',
       default: 0x6691b7,
+    })
+    .option('callGasLimit', {
+      group: 'Chain:',
+      describe:
+        'Sets the transaction gas limit for `eth_call` and `eth_estimateGas` calls. Must be specified as a hex string. Defaults to "0x1fffffffffffff" (Number.MAX_SAFE_INTEGER)',
+      type: 'number',
+      default: 0x1fffffffffffff,
     })
     .option('allowUnlimitedContractSize', {
       group: 'Chain:',
