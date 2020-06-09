@@ -80,6 +80,7 @@ var options = {
   default_balance_ether: argv.e,
   blockTime: argv.b,
   gasPrice: argv.g,
+  gasPriceFeeCurrencyRatio: argv.gpfcr,
   gasLimit: argv.l,
   accounts: parseAccounts(argv.account),
   unlocked_accounts: argv.unlock,
@@ -203,6 +204,12 @@ function startGanache(err, result) {
     console.log("Gas Price");
     console.log("==================");
     console.log(options.gasPrice);
+    if (options.gasPriceFeeCurrencyRatio) {
+      console.log("");
+      console.log("Gas Price for Non-Native Fee Currency");
+      console.log("==================");
+      console.log(options.gasPriceFeeCurrencyRatio * options.gasPrice);
+    }
   }
 
   if (options.gasLimit) {

@@ -153,6 +153,13 @@ module.exports = exports = function(yargs, version, isDocker) {
       type: 'number',
       default: 20000000000
     })
+    .option('gpfcr', {
+      group: 'Chain:',
+      alias: 'gasPriceFeeCurrencyRatio',
+      describe: 'The factor to multiply the gasPrice by for non-native feeCurrency usage',
+      type: 'number',
+      default: 5
+    })
     .option('l', {
       group: 'Chain:',
       alias: 'gasLimit',
