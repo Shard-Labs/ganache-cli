@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 "@celo/ganache-core@git+https://github.com/mrsmkl/ganache-core.git":
   version "2.10.2"
   resolved "git+https://github.com/mrsmkl/ganache-core.git#9115ad944d12c3a9cad76b903204af6152aaeba3"
@@ -35,6 +36,11 @@
   version "2.10.2"
   resolved "git+https://github.com/celo-org/ganache-core.git#34d94621d82c784f9e3f83d92c920dc6f9fc4ac0"
 >>>>>>> 65100f6... Update deps
+=======
+"@celo/ganache-core@git+https://github.com/celo-org/ganache-core.git#a41ac442e9665cde314bb6770f4139f82da539a7":
+  version "2.10.2"
+  resolved "git+https://github.com/celo-org/ganache-core.git#a41ac442e9665cde314bb6770f4139f82da539a7"
+>>>>>>> 0355706... Bump ganache-core to master with fixed personal_importRawKey
   dependencies:
     abstract-leveldown "3.0.0"
     async "2.6.2"
