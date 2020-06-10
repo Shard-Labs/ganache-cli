@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 "@celo/ganache-core@git+https://github.com/mrsmkl/ganache-core.git":
   version "2.10.2"
   resolved "git+https://github.com/mrsmkl/ganache-core.git#9115ad944d12c3a9cad76b903204af6152aaeba3"
@@ -41,6 +42,11 @@
   version "2.10.2"
   resolved "git+https://github.com/celo-org/ganache-core.git#a41ac442e9665cde314bb6770f4139f82da539a7"
 >>>>>>> 0355706... Bump ganache-core to master with fixed personal_importRawKey
+=======
+"@celo/ganache-core@git+https://github.com/celo-org/ganache-core.git#7d207f9":
+  version "2.10.2"
+  resolved "git+https://github.com/celo-org/ganache-core.git#7d207f9a01a59dfbec56229feeadef99e000ae87"
+>>>>>>> f20a1e2... bump core build
   dependencies:
     abstract-leveldown "3.0.0"
     async "2.6.2"
