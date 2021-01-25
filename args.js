@@ -1,4 +1,4 @@
-module.exports = exports = function(yargs, version, isDocker) {
+module.exports = exports = function (yargs, version, isDocker) {
   return yargs
     .strict()
     .option('p', {
@@ -6,41 +6,43 @@ module.exports = exports = function(yargs, version, isDocker) {
       alias: 'port',
       type: 'number',
       default: 8545,
-      describe: 'Port number to listen on'
+      describe: 'Port number to listen on',
     })
     .option('h', {
       group: 'Network:',
       alias: ['host', 'hostname'],
       type: 'string',
       default: isDocker ? '0.0.0.0' : '127.0.0.1',
-      describe: 'Hostname to listen on'
+      describe: 'Hostname to listen on',
     })
     .option('keepAliveTimeout', {
       group: 'Network:',
       type: 'number',
       default: 5000,
-      describe: 'The number of milliseconds of inactivity a server needs to wait for additional incoming data, after it has finished writing the last response, before a socket will be destroyed.'
+      describe:
+        'The number of milliseconds of inactivity a server needs to wait for additional incoming data, after it has finished writing the last response, before a socket will be destroyed.',
     })
     .option('a', {
       group: 'Accounts:',
       alias: 'accounts',
       describe: 'Number of accounts to generate at startup',
       type: 'number',
-      default: 10
+      default: 10,
     })
     .option('e', {
       group: 'Accounts:',
       alias: 'defaultBalanceEther',
       describe: 'Amount of ether to assign each test account',
       type: 'number',
-      default: 100.0
+      default: 100.0,
     })
     .option('account', {
       group: 'Accounts:',
-      describe: "Account data in the form '<private_key>,<initial_balance>', can be specified multiple times. Note that private keys are 64 characters long and must be entered as an 0x-prefixed hex string. Balance can either be input as an integer, or as a 0x-prefixed hex string with either form specifying the initial balance in wei.",
+      describe:
+        "Account data in the form '<private_key>,<initial_balance>', can be specified multiple times. Note that private keys are 64 characters long and must be entered as an 0x-prefixed hex string. Balance can either be input as an integer, or as a 0x-prefixed hex string with either form specifying the initial balance in wei.",
       type: 'array',
       string: true,
-      demandOption: false
+      demandOption: false,
     })
     .option('account_keys_path', {
       group: 'Accounts:',
@@ -49,14 +51,14 @@ module.exports = exports = function(yargs, version, isDocker) {
       describe: 'saves generated accounts and private keys as JSON object in specified file',
       normalize: true,
       demandOption: false,
-      default: null
+      default: null,
     })
     .option('n', {
       group: 'Accounts:',
       alias: 'secure',
       describe: 'Lock available accounts by default (good for third party transaction signing)',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('u', {
       group: 'Accounts:',
@@ -64,37 +66,46 @@ module.exports = exports = function(yargs, version, isDocker) {
       type: 'array',
       string: true,
       describe: 'Comma-separated list of accounts or indices to unlock',
-      demandOption: false
+      demandOption: false,
     })
     .option('k', {
       group: 'Chain:',
       alias: 'hardfork',
       type: 'string',
-      describe: "Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, and `petersburg` (default).",
-      default: "petersburg"
+      describe:
+        'Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, and `petersburg` (default).',
+      default: 'petersburg',
     })
     .option('f', {
       group: 'Chain:',
       alias: 'fork',
       type: 'string',
-      describe: "Fork from another currently running Ethereum client at a given block. Input should be the HTTP location and port of the other client, e.g. 'http://localhost:8545' or optionally provide a block number 'http://localhost:8545@1599200'",
-      default: false
+      describe:
+        "Fork from another currently running Ethereum client at a given block. Input should be the HTTP location and port of the other client, e.g. 'http://localhost:8545' or optionally provide a block number 'http://localhost:8545@1599200'",
+      default: false,
     })
     .option('db', {
       group: 'Chain:',
-      describe: 'Directory of chain database; creates one if it doesn\'t exist',
+      describe: "Directory of chain database; creates one if it doesn't exist",
       type: 'string',
       normalize: true,
-      default: null
+      default: null,
+    })
+    .option('db_tar', {
+      group: 'Chain:',
+      describe: 'Directory of chain database tar file;',
+      type: 'string',
+      normalize: true,
+      default: null,
     })
     .option('s', {
       group: 'Chain:',
       alias: 'seed',
       type: 'string',
       describe: 'Arbitrary data to generate the HD wallet mnemonic to be used',
-      defaultDescription: "Random value, unless -d is specified",
+      defaultDescription: 'Random value, unless -d is specified',
       conflicts: 'd',
-      demandOption: false
+      demandOption: false,
     })
     .option('d', {
       group: 'Chain:',
@@ -103,101 +114,106 @@ module.exports = exports = function(yargs, version, isDocker) {
       conflicts: 's',
       type: 'boolean',
       default: undefined,
-      demandOption: false
+      demandOption: false,
     })
     .option('m', {
       group: 'Chain:',
       alias: 'mnemonic',
       type: 'string',
-      describe: 'bip39 mnemonic phrase for generating a PRNG seed, which is in turn used for hierarchical deterministic (HD) account generation',
-      demandOption: false
+      describe:
+        'bip39 mnemonic phrase for generating a PRNG seed, which is in turn used for hierarchical deterministic (HD) account generation',
+      demandOption: false,
     })
     .option('noVMErrorsOnRPCResponse', {
       group: 'Chain:',
-      describe: 'Do not transmit transaction failures as RPC errors. Enable this flag for error reporting behaviour which is compatible with other clients such as geth and Parity.',
+      describe:
+        'Do not transmit transaction failures as RPC errors. Enable this flag for error reporting behaviour which is compatible with other clients such as geth and Parity.',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('b', {
       group: 'Chain:',
       alias: 'blockTime',
       type: 'number',
-      describe: 'Block time in seconds for automatic mining. Will instantly mine a new block for every transaction if option omitted. Avoid using unless your test cases require a specific mining interval.',
-      demandOption: false
+      describe:
+        'Block time in seconds for automatic mining. Will instantly mine a new block for every transaction if option omitted. Avoid using unless your test cases require a specific mining interval.',
+      demandOption: false,
     })
     .option('i', {
       group: 'Chain:',
       alias: 'networkId',
       type: 'number',
-      describe: "The Network ID ganache-cli will use to identify itself.",
-      defaultDescription: "System time at process start or Network ID of forked blockchain if configured.",
-      demandOption: false
+      describe: 'The Network ID ganache-cli will use to identify itself.',
+      defaultDescription: 'System time at process start or Network ID of forked blockchain if configured.',
+      demandOption: false,
     })
     .option('g', {
       group: 'Chain:',
       alias: 'gasPrice',
       describe: 'The price of gas in wei',
       type: 'number',
-      default: 20000000000
+      default: 20000000000,
     })
     .option('gpfcr', {
       group: 'Chain:',
       alias: 'gasPriceFeeCurrencyRatio',
       describe: 'The factor to multiply the gasPrice by for non-native feeCurrency usage',
       type: 'number',
-      default: 5
+      default: 5,
     })
     .option('l', {
       group: 'Chain:',
       alias: 'gasLimit',
       describe: 'The block gas limit in wei',
       type: 'number',
-      default: 0x6691b7
+      default: 0x6691b7,
     })
     .option('allowUnlimitedContractSize', {
       group: 'Chain:',
-      describe: 'Allows unlimited contract sizes while debugging. By enabling this flag, the check within the EVM for contract size limit of 24KB (see EIP-170) is bypassed. Enabling this flag *will* cause ganache-cli to behave differently than production environments.',
+      describe:
+        'Allows unlimited contract sizes while debugging. By enabling this flag, the check within the EVM for contract size limit of 24KB (see EIP-170) is bypassed. Enabling this flag *will* cause ganache-cli to behave differently than production environments.',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('t', {
       group: 'Chain:',
       alias: 'time',
-      describe: 'Date (ISO 8601) that the first block should start. Use this feature, along with the evm_increaseTime method to test time-dependent code.',
+      describe:
+        'Date (ISO 8601) that the first block should start. Use this feature, along with the evm_increaseTime method to test time-dependent code.',
       type: 'string',
       coerce: (arg) => {
         let timestamp = Date.parse(arg);
         if (isNaN(timestamp)) {
-          throw new Error('Invalid \'time\' format');
+          throw new Error("Invalid 'time' format");
         }
         return new Date(timestamp);
-      }
+      },
     })
     .option('debug', {
       group: 'Other:',
       describe: 'Output VM opcodes for debugging',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('v', {
       group: 'Other:',
       alias: 'verbose',
       describe: 'Log all requests and responses to stdout',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('mem', {
       group: 'Other:',
       describe: 'Only show memory output, not tx history',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('q', {
       group: 'Other:',
       alias: 'quiet',
       describe: 'Run ganache quietly (no logs)',
       type: 'boolean',
-      default: false
+      default: false,
     })
     .showHelpOnFail(false, 'Specify -? or --help for available options')
     .help('help')
@@ -214,5 +230,5 @@ module.exports = exports = function(yargs, version, isDocker) {
       }
 
       return true;
-    })
-}
+    });
+};

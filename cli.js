@@ -1,45 +1,46 @@
 #!/usr/bin/env node
 
-const gasLimit = 20000000
-const MNEMONIC = 'concert load couple harbor equip island argue ramp clarify fence smart topic'
+const gasLimit = 20000000;
+const MNEMONIC = 'concert load couple harbor equip island argue ramp clarify fence smart topic';
 
 // make sourcemaps work!
 require('source-map-support').install();
 
-var yargs = require("yargs");
-var pkg = require("./package.json");
-var {toChecksumAddress, BN} = require("ethereumjs-util");
+var yargs = require('yargs');
+var pkg = require('./package.json');
+var { toChecksumAddress, BN } = require('ethereumjs-util');
 var ganache;
 try {
-  ganache = require("./lib");
-} catch(e) {
-  ganache = require("./build/ganache-core.node.cli.js");
+  ganache = require('./lib');
+} catch (e) {
+  ganache = require('./build/ganache-core.node.cli.js');
 }
 var to = ganache.to;
-var URL = require("url");
-var fs = require("fs");
-var initArgs = require("./args")
+var URL = require('url');
+var fs = require('fs');
+var initArgs = require('./args');
 
-var detailedVersion = "Ganache CLI v" + pkg.version + " (ganache-core: " + ganache.version + ")";
+var detailedVersion = 'Ganache CLI v' + pkg.version + ' (ganache-core: ' + ganache.version + ')';
 
-var isDocker = "DOCKER" in process.env && process.env.DOCKER.toLowerCase() === "true";
+var isDocker = 'DOCKER' in process.env && process.env.DOCKER.toLowerCase() === 'true';
 var argv = initArgs(yargs, detailedVersion, isDocker).argv;
+
+var targz = require('targz');
+var tmp = require('tmp');
 
 function parseAccounts(accounts) {
   function splitAccount(account) {
-    account = account.split(',')
+    account = account.split(',');
     return {
       secretKey: account[0],
-      balance: account[1]
+      balance: account[1],
     };
   }
 
-  if (typeof accounts === 'string')
-    return [ splitAccount(accounts) ];
-  else if (!Array.isArray(accounts))
-    return;
+  if (typeof accounts === 'string') return [splitAccount(accounts)];
+  else if (!Array.isArray(accounts)) return;
 
-  var ret = []
+  var ret = [];
   for (var i = 0; i < accounts.length; i++) {
     ret.push(splitAccount(accounts[i]));
   }
@@ -47,19 +48,19 @@ function parseAccounts(accounts) {
 }
 
 if (argv.d) {
-  argv.s = "TestRPC is awesome!"; // Seed phrase; don't change to Ganache, maintain original determinism
+  argv.s = 'TestRPC is awesome!'; // Seed phrase; don't change to Ganache, maintain original determinism
 }
 
-if (typeof argv.unlock == "string") {
+if (typeof argv.unlock == 'string') {
   argv.unlock = [argv.unlock];
 }
 
 var logger = console;
 
 // If quiet argument passed, no output
-if (argv.q === true){
+if (argv.q === true) {
   logger = {
-    log: function() {}
+    log: function () {},
   };
 }
 
@@ -67,10 +68,10 @@ if (argv.q === true){
 // not transaction history.
 if (argv.mem === true) {
   logger = {
-    log: function() {}
+    log: function () {},
   };
 
-  setInterval(function() {
+  setInterval(function () {
     console.log(process.memoryUsage());
   }, 1000);
 }
@@ -101,14 +102,14 @@ var options = {
   logger: logger,
   allowUnlimitedContractSize: argv.allowUnlimitedContractSize,
   time: argv.t,
-  keepAliveTimeout: argv.keepAliveTimeout
-}
+  keepAliveTimeout: argv.keepAliveTimeout,
+};
 
 var fork_address;
 
 // If we're forking from another client, don't try to use the same port.
 if (options.fork) {
-  var split = options.fork.split("@");
+  var split = options.fork.split('@');
   fork_address = split[0];
   var block;
   if (split.length > 1) {
@@ -116,133 +117,158 @@ if (options.fork) {
   }
 
   if (URL.parse(fork_address).port == options.port) {
-    options.port = (parseInt(options.port) + 1);
+    options.port = parseInt(options.port) + 1;
   }
 
-  options.fork = fork_address + (block != null ? "@" + block : "");
+  options.fork = fork_address + (block != null ? '@' + block : '');
 }
 
 // Before starting ganache load from tar file
-if(options.db_path_tar){
 
+(async () => {
+  try {
+    if (options.db_path_tar) {
+      await runDevChainFromTar(options.db_path_tar);
+
+      var server = ganache.server(options);
+
+      console.log(detailedVersion);
+
+      server.listen(options.port, options.hostname, function (err, result) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        var state = result ? result : server.provider.manager.state;
+
+        console.log('');
+        console.log('Available Accounts');
+        console.log('==================');
+
+        var accounts = state.accounts;
+        var addresses = Object.keys(accounts);
+        var ethInWei = new BN('1000000000000000000');
+
+        addresses.forEach(function (address, index) {
+          var balance = new BN(accounts[address].account.balance);
+          var strBalance = balance.divRound(ethInWei).toString();
+          var about = balance.mod(ethInWei).isZero() ? '' : '~';
+          var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} ETH)`;
+
+          if (state.isUnlocked(address) == false) {
+            line += ' 🔒';
+          }
+
+          console.log(line);
+        });
+
+        console.log('');
+        console.log('Private Keys');
+        console.log('==================');
+
+        addresses.forEach(function (address, index) {
+          console.log('(' + index + ') ' + '0x' + accounts[address].secretKey.toString('hex'));
+        });
+
+        if (options.account_keys_path != null) {
+          console.log('');
+          console.log('Accounts and keys saved to ' + options.account_keys_path);
+        }
+
+        if (options.accounts == null) {
+          console.log('');
+          console.log('HD Wallet');
+          console.log('==================');
+          console.log('Mnemonic:      ' + state.mnemonic);
+          console.log('Base HD Path:  ' + state.wallet_hdpath + '{account_index}');
+        }
+
+        if (options.gasPrice) {
+          console.log('');
+          console.log('Gas Price');
+          console.log('==================');
+          console.log(options.gasPrice);
+          if (options.gasPriceFeeCurrencyRatio) {
+            console.log('');
+            console.log('Gas Price for Non-Native Fee Currency');
+            console.log('==================');
+            console.log(options.gasPriceFeeCurrencyRatio * options.gasPrice);
+          }
+        }
+
+        if (options.gasLimit) {
+          console.log('');
+          console.log('Gas Limit');
+          console.log('==================');
+          console.log(options.gasLimit);
+        }
+
+        if (options.fork) {
+          console.log('');
+          console.log('Forked Chain');
+          console.log('==================');
+          console.log('Location:    ' + fork_address);
+          console.log('Block:       ' + to.number(state.blockchain.fork_block_number));
+          console.log('Network ID:  ' + state.net_version);
+          console.log('Time:        ' + (state.blockchain.startTime || new Date()).toString());
+        }
+
+        console.log('');
+        console.log('Listening on ' + options.hostname + ':' + options.port);
+      });
+
+      process.on('uncaughtException', function (e) {
+        console.log(e.stack);
+        process.exit(1);
+      });
+
+      // See http://stackoverflow.com/questions/10021373/what-is-the-windows-equivalent-of-process-onsigint-in-node-js
+      if (process.platform === 'win32') {
+        require('readline')
+          .createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          })
+          .on('SIGINT', function () {
+            process.emit('SIGINT');
+          });
+      }
+
+      process.on('SIGINT', function () {
+        // graceful shutdown
+        server.close(function (err) {
+          if (err) {
+            console.log(err.stack || err);
+          }
+          process.exit();
+        });
+      });
+    }
+  } catch (e) {
+    // Deal with the fact the chain failed
+  }
+})();
+
+async function runDevChainFromTar(filename) {
+  const chainCopy = tmp.dirSync({ keep: false, unsafeCleanup: true });
+
+  function decompressChain(tarPath, copyChainPath) {
+    return new Promise((resolve, reject) => {
+      targz.decompress({ src: tarPath, dest: copyChainPath }, (err) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        } else {
+          console.log('Chain decompressed');
+          resolve();
+        }
+      });
+    });
+  }
+
+  await decompressChain(options.db_path_tar, chainCopy.name);
 }
-
-
-var server = ganache.server(options);
-
-console.log(detailedVersion);
-
-server.listen(options.port, options.hostname, function(err, result) {
-  if (err) {
-    console.log(err);
-    return;
-  }
-
-  var state = result ? result : server.provider.manager.state;
-
-  console.log("");
-  console.log("Available Accounts");
-  console.log("==================");
-
-  var accounts = state.accounts;
-  var addresses = Object.keys(accounts);
-  var ethInWei = new BN("1000000000000000000");
-
-  addresses.forEach(function(address, index) {
-    var balance = new BN(accounts[address].account.balance);
-    var strBalance = balance.divRound(ethInWei).toString();
-    var about = balance.mod(ethInWei).isZero() ? "" : "~";
-    var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} ETH)`;
-
-    if (state.isUnlocked(address) == false) {
-      line += " 🔒";
-    }
-
-    console.log(line);
-  });
-
-  console.log("");
-  console.log("Private Keys");
-  console.log("==================");
-
-  addresses.forEach(function(address, index) {
-    console.log("(" + index + ") " + "0x" + accounts[address].secretKey.toString("hex"));
-  });
-
-
-  if (options.account_keys_path != null) {
-    console.log("");
-    console.log("Accounts and keys saved to " + options.account_keys_path);
-  }
-
-  if (options.accounts == null) {
-    console.log("");
-    console.log("HD Wallet");
-    console.log("==================");
-    console.log("Mnemonic:      " + state.mnemonic);
-    console.log("Base HD Path:  " + state.wallet_hdpath + "{account_index}")
-  }
-
-  if (options.gasPrice) {
-    console.log("");
-    console.log("Gas Price");
-    console.log("==================");
-    console.log(options.gasPrice);
-    if (options.gasPriceFeeCurrencyRatio) {
-      console.log("");
-      console.log("Gas Price for Non-Native Fee Currency");
-      console.log("==================");
-      console.log(options.gasPriceFeeCurrencyRatio * options.gasPrice);
-    }
-  }
-
-  if (options.gasLimit) {
-    console.log("");
-    console.log("Gas Limit");
-    console.log("==================");
-    console.log(options.gasLimit);
-  }
-
-  if (options.fork) {
-    console.log("");
-    console.log("Forked Chain");
-    console.log("==================");
-    console.log("Location:    " + fork_address);
-    console.log("Block:       " + to.number(state.blockchain.fork_block_number));
-    console.log("Network ID:  " + state.net_version);
-    console.log("Time:        " + (state.blockchain.startTime || new Date()).toString());
-  }
-
-  console.log("");
-  console.log("Listening on " + options.hostname + ":" + options.port);
-});
-
-process.on('uncaughtException', function(e) {
-  console.log(e.stack);
-  process.exit(1);
-})
-
-// See http://stackoverflow.com/questions/10021373/what-is-the-windows-equivalent-of-process-onsigint-in-node-js
-if (process.platform === "win32") {
-  require("readline").createInterface({
-    input: process.stdin,
-    output: process.stdout
-  })
-  .on("SIGINT", function () {
-    process.emit("SIGINT");
-  });
-}
-
-process.on("SIGINT", function () {
-  // graceful shutdown
-  server.close(function(err) {
-    if (err) {
-      console.log(err.stack || err);
-    }
-    process.exit();
-  });
-});
-
 
 // -----------------------------------------------------------
 
@@ -322,7 +348,6 @@ process.on("SIGINT", function () {
 //   })
 // }
 
-
 // function exitOnError(p) {
 //   p.catch((err) => {
 //     console.error(`Command Failed`)
@@ -341,7 +366,6 @@ process.on("SIGINT", function () {
 //     fs.mkdirSync(dir)
 //   }
 // }
-
 
 // function runMigrations(opts = {}) {
 //   const cmdArgs = ['truffle', 'migrate', '--reset', '--network', 'development']
