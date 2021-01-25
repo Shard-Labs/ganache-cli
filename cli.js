@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+const gasLimit = 20000000
+const MNEMONIC = 'concert load couple harbor equip island argue ramp clarify fence smart topic'
+
 // make sourcemaps work!
 require('source-map-support').install();
 
@@ -92,6 +95,7 @@ var options = {
   verbose: argv.v,
   secure: argv.n,
   db_path: argv.db,
+  db_path_tar: argv.db_tar,
   account_keys_path: argv.account_keys_path,
   vmErrorsOnRPCResponse: !argv.noVMErrorsOnRPCResponse,
   logger: logger,
@@ -117,6 +121,12 @@ if (options.fork) {
 
   options.fork = fork_address + (block != null ? "@" + block : "");
 }
+
+// Before starting ganache load from tar file
+if(options.db_path_tar){
+
+}
+
 
 var server = ganache.server(options);
 
@@ -232,3 +242,239 @@ process.on("SIGINT", function () {
     process.exit();
   });
 });
+
+
+// -----------------------------------------------------------
+
+// async function startGanache(
+//   datadir,
+//   opts,
+//   chainCopy
+// ) {
+//   const logFn = opts.verbose
+//     ? // tslint:disable-next-line: no-console
+//       (...args) => console.log(...args)
+//     : () => {
+//         /*nothing*/
+//       }
+
+//   const server = ganache.server({
+//     default_balance_ether: 200000000,
+//     logger: {
+//       log: logFn,
+//     },
+//     network_id: 1101,
+//     db_path: datadir,
+//     mnemonic: MNEMONIC,
+//     gasLimit,
+//     allowUnlimitedContractSize: true,
+//   })
+
+//   await new Promise((resolve, reject) => {
+//     server.listen(8545, (err, blockchain) => {
+//       if (err) {
+//         reject(err)
+//       } else {
+//         // tslint:disable-next-line: no-console
+//         console.log(chalk.red('Ganache STARTED'))
+//         // console.log(blockchain)
+//         resolve(blockchain)
+//       }
+//     })
+//   })
+
+//   return () =>
+//     new Promise((resolve, reject) => {
+//       server.close((err) => {
+//         if (chainCopy) {
+//           chainCopy.removeCallback()
+//         }
+//         if (err) {
+//           reject(err)
+//         } else {
+//           resolve()
+//         }
+//       })
+//     })
+// }
+
+// export function execCmd(
+//   cmd,
+//   args,
+//   options
+// ) {
+//   return new Promise(async (resolve, reject) => {
+//     const { silent, ...spawnOptions } = options || { silent: false }
+//     if (!silent) {
+//       console.debug('$ ' + [cmd].concat(args).join(' '))
+//     }
+//     const process = spawn(cmd, args, {
+//       ...spawnOptions,
+//       stdio: silent ? 'ignore' : 'inherit',
+//     })
+//     process.on('close', (code) => {
+//       try {
+//         resolve(code)
+//       } catch (error) {
+//         reject(error)
+//       }
+//     })
+//   })
+// }
+
+
+// function exitOnError(p) {
+//   p.catch((err) => {
+//     console.error(`Command Failed`)
+//     console.error(err)
+//     process.exit(1)
+//   })
+// }
+
+// async function resetDir(dir, silent) {
+//   if (fs.existsSync(dir)) {
+//     await execCmd('rm', ['-rf', dir], { silent })
+//   }
+// }
+// function createDirIfMissing(dir) {
+//   if (!fs.existsSync(dir)) {
+//     fs.mkdirSync(dir)
+//   }
+// }
+
+
+// function runMigrations(opts = {}) {
+//   const cmdArgs = ['truffle', 'migrate', '--reset', '--network', 'development']
+
+//   if (opts.upto) {
+//     cmdArgs.push('--to')
+//     cmdArgs.push(opts.upto.toString())
+//   }
+
+//   if (opts.migrationOverride) {
+//     cmdArgs.push('--migration_override')
+//     cmdArgs.push(fs.readFileSync(opts.migrationOverride).toString())
+//   }
+//   return execCmd(`yarn`, cmdArgs, { cwd: ProtocolRoot })
+// }
+
+// function deployReleaseGold(releaseGoldContracts) {
+//   const cmdArgs = ['truffle', 'exec', 'scripts/truffle/deploy_release_contracts.js']
+//   cmdArgs.push('--network')
+//   // TODO(lucas): investigate if this can be found dynamically
+//   cmdArgs.push('development')
+//   cmdArgs.push('--from')
+//   cmdArgs.push('0x5409ED021D9299bf6814279A6A1411A7e866A631')
+//   cmdArgs.push('--grants')
+//   cmdArgs.push(releaseGoldContracts)
+//   cmdArgs.push('--start_gold')
+//   cmdArgs.push('1')
+//   cmdArgs.push('--deployed_grants')
+//   // Random file name to prevent rewriting to it
+//   cmdArgs.push('/tmp/deployedGrants' + Math.floor(1000 * Math.random()) + '.json')
+//   cmdArgs.push('--output_file')
+//   cmdArgs.push('/tmp/releaseGoldOutput.txt')
+//   // --yesreally command to bypass prompts
+//   cmdArgs.push('--yesreally')
+//   cmdArgs.push('--build_directory')
+//   cmdArgs.push(ProtocolRoot + 'build')
+
+//   return execCmd(`yarn`, cmdArgs, { cwd: ProtocolRoot })
+// }
+
+// async function runDevChainFromTar(filename) {
+//   const chainCopy = tmp.dirSync({ keep: false, unsafeCleanup: true })
+//   // tslint:disable-next-line: no-console
+//   console.log(`Creating tmp folder: ${chainCopy.name}`)
+
+//   await decompressChain(filename, chainCopy.name)
+
+//   const stopGanache = await startGanache(chainCopy.name, { verbose: true }, chainCopy)
+//   return stopGanache
+// }
+
+// function decompressChain(tarPath, copyChainPath) {
+//   // tslint:disable-next-line: no-console
+//   console.log('Decompressing chain')
+//   return new Promise((resolve, reject) => {
+//     targz.decompress({ src: tarPath, dest: copyChainPath }, (err) => {
+//       if (err) {
+//         console.error(err)
+//         reject(err)
+//       } else {
+//         // tslint:disable-next-line: no-console
+//         console.log('Chain decompressed')
+//         resolve()
+//       }
+//     })
+//   })
+// }
+
+// async function runDevChain(
+//   datadir,
+//   opts = {}
+// ) {
+//   if (opts.reset) {
+//     await resetDir(datadir)
+//   }
+//   createDirIfMissing(datadir)
+//   const stopGanache = await startGanache(datadir, { verbose: true })
+//   if (opts.reset || opts.runMigrations) {
+//     const code = await runMigrations({ upto: opts.upto, migrationOverride: opts.migrationOverride })
+//     if (code !== 0) {
+//       throw Error('Migrations failed')
+//     }
+//   }
+//   if (opts.releaseGoldContracts) {
+//     const code = await deployReleaseGold(opts.releaseGoldContracts)
+//     if (code !== 0) {
+//       throw Error('ReleaseGold deployment failed')
+//     }
+//   }
+//   return stopGanache
+// }
+
+// async function generateDevChain(
+//   filePath,
+//   opts = {}
+// ) {
+//   let chainPath = filePath
+//   let chainTmp
+//   if (opts.targz) {
+//     chainTmp = tmp.dirSync({ keep: false, unsafeCleanup: true })
+//     chainPath = chainTmp.name
+//   } else {
+//     fs.ensureDirSync(chainPath)
+//   }
+//   const stopGanache = await runDevChain(chainPath, {
+//     reset: !opts.targz,
+//     runMigrations: true,
+//     upto: opts.upto,
+//     migrationOverride: opts.migrationOverride,
+//     releaseGoldContracts: opts.releaseGoldContracts,
+//   })
+//   await stopGanache()
+//   if (opts.targz && chainTmp) {
+//     await compressChain(chainPath, filePath)
+//     chainTmp.removeCallback()
+//   }
+// }
+
+// async function compressChain(chainPath, filename) {
+//   // tslint:disable-next-line: no-console
+//   console.log('Compressing chain')
+//   return new Promise((resolve, reject) => {
+//     // ensures the path to the file
+//     fs.ensureFileSync(filename)
+//     targz.compress({ src: chainPath, dest: filename }, async (err) => {
+//       if (err) {
+//         console.error(err)
+//         reject(err)
+//       } else {
+//         // tslint:disable-next-line: no-console
+//         console.log('Chain compressed')
+//         resolve()
+//       }
+//     })
+//   })
+// }

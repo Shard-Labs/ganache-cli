@@ -7,6 +7,7 @@
   "main": "./build/ganache-core.node.cli.js",
   "scripts": {
     "start": "node cli.js",
+    "start-dev": "node cli.js -l 2000000000",
     "build": "webpack-cli --config ./webpack/webpack.node.config.js",
     "docker": "docker build -t trufflesuite/ganache-cli . && docker run -p 8545:8545 trufflesuite/ganache-cli",
     "prepublishOnly": "npm run build"
