@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+var tmp = require('tmp');
+tmp.setGracefulCleanup();
+
+var path = require('path');
+
 const gasLimit = 20000000;
 const MNEMONIC = 'concert load couple harbor equip island argue ramp clarify fence smart topic';
 
@@ -17,7 +22,7 @@ try {
 }
 var to = ganache.to;
 var URL = require('url');
-var fs = require('fs');
+var fs = require('fs-extra');
 var initArgs = require('./args');
 
 var detailedVersion = 'Ganache CLI v' + pkg.version + ' (ganache-core: ' + ganache.version + ')';
@@ -26,7 +31,7 @@ var isDocker = 'DOCKER' in process.env && process.env.DOCKER.toLowerCase() === '
 var argv = initArgs(yargs, detailedVersion, isDocker).argv;
 
 var targz = require('targz');
-var tmp = require('tmp');
+var death = require('death')({ debug: true, uncaughtException: true });
 
 function parseAccounts(accounts) {
   function splitAccount(account) {
@@ -129,124 +134,149 @@ if (options.fork) {
   try {
     if (options.db_path_tar) {
       await runDevChainFromTar(options.db_path_tar);
+    }
 
-      var server = ganache.server(options);
+    var server = ganache.server(options);
 
-      console.log(detailedVersion);
+    console.log(detailedVersion);
 
-      server.listen(options.port, options.hostname, function (err, result) {
-        if (err) {
-          console.log(err);
-          return;
-        }
-
-        var state = result ? result : server.provider.manager.state;
-
-        console.log('');
-        console.log('Available Accounts');
-        console.log('==================');
-
-        var accounts = state.accounts;
-        var addresses = Object.keys(accounts);
-        var ethInWei = new BN('1000000000000000000');
-
-        addresses.forEach(function (address, index) {
-          var balance = new BN(accounts[address].account.balance);
-          var strBalance = balance.divRound(ethInWei).toString();
-          var about = balance.mod(ethInWei).isZero() ? '' : '~';
-          var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} ETH)`;
-
-          if (state.isUnlocked(address) == false) {
-            line += ' 🔒';
-          }
-
-          console.log(line);
-        });
-
-        console.log('');
-        console.log('Private Keys');
-        console.log('==================');
-
-        addresses.forEach(function (address, index) {
-          console.log('(' + index + ') ' + '0x' + accounts[address].secretKey.toString('hex'));
-        });
-
-        if (options.account_keys_path != null) {
-          console.log('');
-          console.log('Accounts and keys saved to ' + options.account_keys_path);
-        }
-
-        if (options.accounts == null) {
-          console.log('');
-          console.log('HD Wallet');
-          console.log('==================');
-          console.log('Mnemonic:      ' + state.mnemonic);
-          console.log('Base HD Path:  ' + state.wallet_hdpath + '{account_index}');
-        }
-
-        if (options.gasPrice) {
-          console.log('');
-          console.log('Gas Price');
-          console.log('==================');
-          console.log(options.gasPrice);
-          if (options.gasPriceFeeCurrencyRatio) {
-            console.log('');
-            console.log('Gas Price for Non-Native Fee Currency');
-            console.log('==================');
-            console.log(options.gasPriceFeeCurrencyRatio * options.gasPrice);
-          }
-        }
-
-        if (options.gasLimit) {
-          console.log('');
-          console.log('Gas Limit');
-          console.log('==================');
-          console.log(options.gasLimit);
-        }
-
-        if (options.fork) {
-          console.log('');
-          console.log('Forked Chain');
-          console.log('==================');
-          console.log('Location:    ' + fork_address);
-          console.log('Block:       ' + to.number(state.blockchain.fork_block_number));
-          console.log('Network ID:  ' + state.net_version);
-          console.log('Time:        ' + (state.blockchain.startTime || new Date()).toString());
-        }
-
-        console.log('');
-        console.log('Listening on ' + options.hostname + ':' + options.port);
-      });
-
-      process.on('uncaughtException', function (e) {
-        console.log(e.stack);
-        process.exit(1);
-      });
-
-      // See http://stackoverflow.com/questions/10021373/what-is-the-windows-equivalent-of-process-onsigint-in-node-js
-      if (process.platform === 'win32') {
-        require('readline')
-          .createInterface({
-            input: process.stdin,
-            output: process.stdout,
-          })
-          .on('SIGINT', function () {
-            process.emit('SIGINT');
-          });
+    server.listen(options.port, options.hostname, function (err, result) {
+      if (err) {
+        console.log(err);
+        return;
       }
 
-      process.on('SIGINT', function () {
-        // graceful shutdown
-        server.close(function (err) {
-          if (err) {
-            console.log(err.stack || err);
-          }
-          process.exit();
-        });
+      var state = result ? result : server.provider.manager.state;
+
+      console.log('');
+      console.log('Available Accounts');
+      console.log('==================');
+
+      var accounts = state.accounts;
+      var addresses = Object.keys(accounts);
+      var ethInWei = new BN('1000000000000000000');
+
+      addresses.forEach(function (address, index) {
+        var balance = new BN(accounts[address].account.balance);
+        var strBalance = balance.divRound(ethInWei).toString();
+        var about = balance.mod(ethInWei).isZero() ? '' : '~';
+        var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} ETH)`;
+
+        if (state.isUnlocked(address) == false) {
+          line += ' 🔒';
+        }
+
+        console.log(line);
       });
+
+      console.log('');
+      console.log('Private Keys');
+      console.log('==================');
+
+      addresses.forEach(function (address, index) {
+        console.log('(' + index + ') ' + '0x' + accounts[address].secretKey.toString('hex'));
+      });
+
+      if (options.account_keys_path != null) {
+        console.log('');
+        console.log('Accounts and keys saved to ' + options.account_keys_path);
+      }
+
+      if (options.accounts == null) {
+        console.log('');
+        console.log('HD Wallet');
+        console.log('==================');
+        console.log('Mnemonic:      ' + state.mnemonic);
+        console.log('Base HD Path:  ' + state.wallet_hdpath + '{account_index}');
+      }
+
+      if (options.gasPrice) {
+        console.log('');
+        console.log('Gas Price');
+        console.log('==================');
+        console.log(options.gasPrice);
+        if (options.gasPriceFeeCurrencyRatio) {
+          console.log('');
+          console.log('Gas Price for Non-Native Fee Currency');
+          console.log('==================');
+          console.log(options.gasPriceFeeCurrencyRatio * options.gasPrice);
+        }
+      }
+
+      if (options.gasLimit) {
+        console.log('');
+        console.log('Gas Limit');
+        console.log('==================');
+        console.log(options.gasLimit);
+      }
+
+      if (options.fork) {
+        console.log('');
+        console.log('Forked Chain');
+        console.log('==================');
+        console.log('Location:    ' + fork_address);
+        console.log('Block:       ' + to.number(state.blockchain.fork_block_number));
+        console.log('Network ID:  ' + state.net_version);
+        console.log('Time:        ' + (state.blockchain.startTime || new Date()).toString());
+      }
+
+      console.log('');
+      console.log('Listening on ' + options.hostname + ':' + options.port);
+    });
+
+    process.on('uncaughtException', function (e) {
+      console.log(e.stack);
+      process.exit(1);
+    });
+
+    // See http://stackoverflow.com/questions/10021373/what-is-the-windows-equivalent-of-process-onsigint-in-node-js
+    if (process.platform === 'win32') {
+      require('readline')
+        .createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        })
+        .on('SIGINT', function () {
+          process.emit('SIGINT');
+        });
     }
+
+    // process.on('exit', async function () {
+    //   console.log('CLOSING');
+    //   await compressChain(options.db_path, path.dirname(require.main.filename) + '/devchain2.tar.gz');
+    //   console.log('finished');
+    // });
+
+    death(function (signal, err) {
+      console.log(signal);
+      console.log(err);
+      console.log('CLOSING');
+      await compressChain(options.db_path, path.dirname(require.main.filename) + '/devchain2.tar.gz');
+
+      // graceful shutdown
+      server.close(function (err) {
+        if (err) {
+          console.log(err.stack || err);
+        }
+        process.exit();
+      });
+    });
+
+    // process.on('SIGINT', async function () {
+    //   console.log('CLOSING');
+    //   await compressChain(options.db_path, path.dirname(require.main.filename) + '/devchain2.tar.gz');
+
+    //   // graceful shutdown
+    //   server.close(function (err) {
+    //     if (err) {
+    //       console.log(err.stack || err);
+    //     }
+    //     process.exit();
+    //   });
+    // });
   } catch (e) {
-    // Deal with the fact the chain failed
+    console.error(e);
+    process.exit(1);
   }
 })();
 
@@ -268,6 +298,26 @@ async function runDevChainFromTar(filename) {
   }
 
   await decompressChain(options.db_path_tar, chainCopy.name);
+  options.db_path = chainCopy.name;
+}
+
+async function compressChain(chainPath, filename) {
+  console.log('Compressing chain');
+
+  return new Promise((resolve, reject) => {
+    // ensures the path to the file
+    fs.ensureFileSync(filename);
+
+    targz.compress({ src: chainPath, dest: filename }, async (err) => {
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        console.log('Chain compressed');
+        resolve();
+      }
+    });
+  });
 }
 
 // -----------------------------------------------------------
