@@ -31,7 +31,7 @@ var isDocker = 'DOCKER' in process.env && process.env.DOCKER.toLowerCase() === '
 var argv = initArgs(yargs, detailedVersion, isDocker).argv;
 
 var targz = require('targz');
-var death = require('death')({ debug: true, uncaughtException: true });
+var death = require('death');
 
 function parseAccounts(accounts) {
   function splitAccount(account) {
@@ -247,22 +247,9 @@ if (options.fork) {
     //   console.log('finished');
     // });
 
-    death(function (signal, err) {
-      console.log(signal);
-      console.log(err);
-      console.log('CLOSING');
-      await compressChain(options.db_path, path.dirname(require.main.filename) + '/devchain2.tar.gz');
-
-      // graceful shutdown
-      server.close(function (err) {
-        if (err) {
-          console.log(err.stack || err);
-        }
-        process.exit();
-      });
-    });
-
-    // process.on('SIGINT', async function () {
+    // death(function (signal, err) {
+    //   console.log(signal);
+    //   console.log(err);
     //   console.log('CLOSING');
     //   await compressChain(options.db_path, path.dirname(require.main.filename) + '/devchain2.tar.gz');
 
@@ -274,6 +261,19 @@ if (options.fork) {
     //     process.exit();
     //   });
     // });
+
+    process.on('SIGINT', async function () {
+      console.log('CLOSING');
+      await compressChain(options.db_path, path.dirname(require.main.filename) + '/devchain2.tar.gz');
+
+      // graceful shutdown
+      server.close(function (err) {
+        if (err) {
+          console.log(err.stack || err);
+        }
+        process.exit();
+      });
+    });
   } catch (e) {
     console.error(e);
     process.exit(1);
