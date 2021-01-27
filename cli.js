@@ -128,6 +128,11 @@ if (options.fork) {
   options.fork = fork_address + (block != null ? '@' + block : '');
 }
 
+// If no mnemonic is provided, use default
+if (!options.mnemonic) {
+  options.mnemonic = MNEMONIC;
+}
+
 // Before starting ganache load from tar file
 
 (async () => {
