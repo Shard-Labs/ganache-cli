@@ -160,7 +160,7 @@ if (options.fork) {
         var balance = new BN(accounts[address].account.balance);
         var strBalance = balance.divRound(ethInWei).toString();
         var about = balance.mod(ethInWei).isZero() ? '' : '~';
-        var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} ETH)`;
+        var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} CELO)`;
 
         if (state.isUnlocked(address) == false) {
           line += ' 🔒';
