@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:10 as builder
+FROM mhart/alpine-node:14 as builder
 
 RUN apk add --no-cache make gcc g++ python git bash
 COPY package.json /app/package.json
@@ -9,14 +9,12 @@ RUN npm ci
 COPY . .
 RUN npx webpack-cli --config ./webpack/webpack.docker.config.js
 
-FROM mhart/alpine-node:10 as runtime
+FROM mhart/alpine-node:14 as runtime
 
 WORKDIR /app
 
 COPY --from=builder "/app/node_modules/scrypt/build/Release" "./node_modules/scrypt/build/Release/"
 COPY --from=builder "/app/node_modules/sha3/build/Release" "./node_modules/sha3/build/Release/"
-COPY --from=builder "/app/build/ganache-core.docker.cli.js" "./ganache-core.docker.cli.js"
-COPY --from=builder "/app/build/ganache-core.docker.cli.js.map" "./ganache-core.docker.cli.js.map"
 
 ENV DOCKER true
 
