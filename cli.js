@@ -93,21 +93,27 @@ var options = {
   gasPrice: argv.g,
   gasPriceFeeCurrencyRatio: argv.gpfcr,
   gasLimit: argv.l,
+  callGasLimit: argv.callGasLimit,
   accounts: parseAccounts(argv.account),
   unlocked_accounts: argv.unlock,
   fork: argv.f,
+  forkCacheSize: argv.forkCacheSize,
   hardfork: argv.k,
   network_id: argv.i,
   verbose: argv.v,
   secure: argv.n,
   db_path: argv.db,
   db_path_tar: argv.db_tar,
+  hd_path: argv.hdPath,
   account_keys_path: argv.account_keys_path,
   vmErrorsOnRPCResponse: !argv.noVMErrorsOnRPCResponse,
   logger: logger,
   allowUnlimitedContractSize: argv.allowUnlimitedContractSize,
   time: argv.t,
   keepAliveTimeout: argv.keepAliveTimeout,
+  _chainId: argv.chainId,
+  // gross!
+  _chainIdRpc: argv.chainId,
 };
 
 var fork_address;
