@@ -12,6 +12,7 @@ const MNEMONIC = 'concert load couple harbor equip island argue ramp clarify fen
 require('source-map-support').install();
 
 var yargs = require('yargs');
+var ContractKit = require('@celo/contractkit');
 var pkg = require('./package.json');
 var { toChecksumAddress, BN } = require('ethereumjs-util');
 var ganache;
@@ -65,7 +66,7 @@ var logger = console;
 // If quiet argument passed, no output
 if (argv.q === true) {
   logger = {
-    log: function () {},
+    log: function () { },
   };
 }
 
@@ -73,7 +74,7 @@ if (argv.q === true) {
 // not transaction history.
 if (argv.mem === true) {
   logger = {
-    log: function () {},
+    log: function () { },
   };
 
   setInterval(function () {
@@ -151,7 +152,7 @@ if (!options.mnemonic) {
 
     console.log(detailedVersion);
 
-    server.listen(options.port, options.hostname, function (err, result) {
+    server.listen(options.port, options.hostname, async function (err, result) {
       if (err) {
         console.log(err);
         return;
@@ -159,26 +160,38 @@ if (!options.mnemonic) {
 
       var state = result ? result : server.provider.manager.state;
 
-      console.log('');
-      console.log('Available Accounts');
-      console.log('==================');
+      const kit = ContractKit.newKit(`http://${options.hostname}:${options.port}`);
+
+      const goldtoken = await kit.contracts.getGoldToken();
+      const stabletoken = await kit.contracts.getStableToken();
 
       var accounts = state.accounts;
       var addresses = Object.keys(accounts);
-      var ethInWei = new BN('1000000000000000000');
-
-      addresses.forEach(function (address, index) {
+      const ethInWei = new BN('1000000000000000000');
+      var balancesArray = [];
+      for (const address of addresses) {
+        let index = 1;
+        var celoBalance = await goldtoken.balanceOf(address);
+        var cUSDBalance = await stabletoken.balanceOf(address);
         var balance = new BN(accounts[address].account.balance);
-        var strBalance = balance.divRound(ethInWei).toString();
+        var strBalanceCelo = celoBalance.dividedToIntegerBy(ethInWei);
+        var strBalanceCUSD = cUSDBalance.dividedToIntegerBy(ethInWei);
         var about = balance.mod(ethInWei).isZero() ? '' : '~';
-        var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} CELO)`;
+        var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalanceCelo} CELO), (${about}${strBalanceCUSD} cUSD)`;
 
         if (state.isUnlocked(address) == false) {
           line += ' 🔒';
         }
+        balancesArray.push(line)
+      }
 
-        console.log(line);
-      });
+      console.log('');
+      console.log('Available Accounts');
+      console.log('==================');
+
+      balancesArray.forEach(function (line, index) {
+        console.log(line)
+      })
 
       console.log('');
       console.log('Private Keys');
