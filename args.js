@@ -33,7 +33,7 @@ module.exports = exports = function(yargs, version, isDocker) {
       alias: 'defaultBalanceEther',
       describe: 'Amount of ether to assign each test account',
       type: 'number',
-      default: 100.0
+      default: 200000000
     })
     .option('account', {
       group: 'Accounts:',
@@ -71,7 +71,7 @@ module.exports = exports = function(yargs, version, isDocker) {
       alias: 'hardfork',
       type: 'string',
       describe: "Allows users to specify which hardfork should be used. Supported hardforks are `byzantium`, `constantinople`, `petersburg`, `istanbul` and `muirGlacier` (default).",
-      default: "muirGlacier"
+      default: "istanbul"
     })
     .option('f', {
       group: 'Chain:',
@@ -92,6 +92,13 @@ module.exports = exports = function(yargs, version, isDocker) {
       type: 'string',
       normalize: true,
       default: null
+    })
+    .option('db_tar', {
+      group: 'Chain:',
+      describe: 'Directory of chain database tar file;',
+      type: 'string',
+      normalize: true,
+      default: 'devchain.tar.gz',
     })
     .option('s', {
       group: 'Chain:',
@@ -115,7 +122,7 @@ module.exports = exports = function(yargs, version, isDocker) {
       describe: 'Generate deterministic addresses based on a pre-defined mnemonic.',
       conflicts: 's',
       type: 'boolean',
-      default: undefined,
+      default: true,
       demandOption: false
     })
     .option('m', {
@@ -144,7 +151,8 @@ module.exports = exports = function(yargs, version, isDocker) {
       type: 'number',
       describe: "The Network ID ganache-cli will use to identify itself.",
       defaultDescription: "System time at process start or Network ID of forked blockchain if configured.",
-      demandOption: false
+      demandOption: false,
+      default: 1101
     })
     .option('chainId', {
       group: 'Chain:',
@@ -158,14 +166,21 @@ module.exports = exports = function(yargs, version, isDocker) {
       alias: 'gasPrice',
       describe: 'The price of gas in wei',
       type: 'number',
-      default: 20000000000
+      default: 0
+    })
+    .option('gpfcr', {
+      group: 'Chain:',
+      alias: 'gasPriceFeeCurrencyRatio',
+      describe: 'The factor to multiply the gasPrice by for non-native feeCurrency usage',
+      type: 'number',
+      default: 5,
     })
     .option('l', {
       group: 'Chain:',
       alias: 'gasLimit',
       describe: 'The block gas limit in wei',
       type: 'number',
-      default: 0x6691b7
+      default: 0x1312D00
     })
     .option('callGasLimit', {
       group: 'Chain:',
@@ -177,7 +192,7 @@ module.exports = exports = function(yargs, version, isDocker) {
       group: 'Chain:',
       describe: 'Allows unlimited contract sizes while debugging. By enabling this flag, the check within the EVM for contract size limit of 24KB (see EIP-170) is bypassed. Enabling this flag *will* cause ganache-cli to behave differently than production environments.',
       type: 'boolean',
-      default: false
+      default: true
     })
     .option('t', {
       group: 'Chain:',

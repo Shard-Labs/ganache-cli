@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 
+var tmp = require('tmp');
+tmp.setGracefulCleanup();
+
+var path = require('path');
+
+const MNEMONIC = 'concert load couple harbor equip island argue ramp clarify fence smart topic';
+
 // make sourcemaps work!
 require('source-map-support').install();
 
 var yargs = require("yargs");
 var pkg = require("./package.json");
+var ContractKit = require('@celo/contractkit');
 var {toChecksumAddress, BN} = require("ethereumjs-util");
 var ganache;
 try {
@@ -13,12 +21,17 @@ try {
   ganache = require("./build/ganache-core.node.cli.js");
 }
 var to = ganache.to;
+var URL = require('url');
+var fs = require('fs-extra');
 var initArgs = require("./args")
 
 var detailedVersion = "Ganache CLI v" + pkg.version + " (ganache-core: " + ganache.version + ")";
 
 var isDocker = "DOCKER" in process.env && process.env.DOCKER.toLowerCase() === "true";
 var argv = initArgs(yargs, detailedVersion, isDocker).argv;
+
+var targz = require('targz');
+var death = require('death');
 
 function parseAccounts(accounts) {
   function splitAccount(account) {
@@ -75,11 +88,12 @@ var options = {
   hostname: argv.h,
   debug: argv.debug,
   seed: argv.s,
-  mnemonic: argv.m,
+  mnemonic: argv.m || MNEMONIC,
   total_accounts: argv.a,
   default_balance_ether: argv.e,
   blockTime: argv.b,
   gasPrice: argv.g,
+  gasPriceFeeCurrencyRatio: argv.gpfcr,
   gasLimit: argv.l,
   callGasLimit: argv.callGasLimit,
   accounts: parseAccounts(argv.account),
@@ -91,6 +105,7 @@ var options = {
   verbose: argv.v,
   secure: argv.n,
   db_path: argv.db,
+  db_path_tar: argv.db_tar,
   hd_path: argv.hdPath,
   account_keys_path: argv.account_keys_path,
   vmErrorsOnRPCResponse: !argv.noVMErrorsOnRPCResponse,
@@ -103,8 +118,14 @@ var options = {
   _chainIdRpc: argv.chainId
 }
 
-var server = ganache.server(options);
-
+async function startGanache(){
+  if(options.db_path_tar){
+    await runDevChainFromTar(options.db_path_tar);
+  }
+  var server = ganache.server(options);
+  server.listen(options.port, options.hostname, startedGanache);
+}
+startGanache()
 console.log(detailedVersion);
 
 let started = false;
@@ -149,7 +170,7 @@ process.on("SIGINT", closeHandler);
 process.on("SIGTERM", closeHandler);
 process.on("SIGHUP", closeHandler);
 
-function startGanache(err, result) {
+async function startedGanache(err, result) {
   if (err) {
     console.log(err);
     return;
@@ -157,26 +178,38 @@ function startGanache(err, result) {
   started = true;
   var state = result ? result : server.provider.manager.state;
 
+  var accounts = state.accounts;
+  var addresses = Object.keys(accounts);
+  var ethInWei = new BN("1000000000000000000");
+  
+  // Celo protocol contracts import
+  const kit = ContractKit.newKit(`http://${options.hostname}:${options.port}`);
+  const goldtoken = await kit.contracts.getGoldToken();
+  const stabletoken = await kit.contracts.getStableToken();
+  var balancesArray = [];
+  let index = 1;
+  for (const address of addresses) {
+    var celoBalance = await goldtoken.balanceOf(address);
+    var cUSDBalance = await stabletoken.balanceOf(address);
+    var balance = new BN(accounts[address].account.balance);
+    var strBalanceCelo = celoBalance.dividedToIntegerBy(ethInWei);
+    var strBalanceCUSD = cUSDBalance.dividedToIntegerBy(ethInWei);
+    var about = balance.mod(ethInWei).isZero() ? "" : "~";
+    var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalanceCelo} CELO), (${about}${strBalanceCUSD} cUSD)`;
+    index++;
+    if (state.isUnlocked(address) == false) {
+      line += " 🔒";
+    }
+    balancesArray.push(line)
+  }
+
   console.log("");
   console.log("Available Accounts");
   console.log("==================");
 
-  var accounts = state.accounts;
-  var addresses = Object.keys(accounts);
-  var ethInWei = new BN("1000000000000000000");
-
-  addresses.forEach(function(address, index) {
-    var balance = new BN(accounts[address].account.balance);
-    var strBalance = balance.divRound(ethInWei).toString();
-    var about = balance.mod(ethInWei).isZero() ? "" : "~";
-    var line = `(${index}) ${toChecksumAddress(address)} (${about}${strBalance} ETH)`;
-
-    if (state.isUnlocked(address) == false) {
-      line += " 🔒";
-    }
-
-    console.log(line);
-  });
+  balancesArray.forEach(function (line, index) {
+    console.log(line)
+  })
 
   console.log("");
   console.log("Private Keys");
@@ -205,6 +238,12 @@ function startGanache(err, result) {
     console.log("Gas Price");
     console.log("==================");
     console.log(options.gasPrice);
+    if (options.gasPriceFeeCurrencyRatio) {
+      console.log('');
+      console.log('Gas Price for Non-Native Fee Currency');
+      console.log('==================');
+      console.log(options.gasPriceFeeCurrencyRatio * options.gasPrice);
+    }
   }
 
   if (options.gasLimit) {
@@ -220,6 +259,7 @@ function startGanache(err, result) {
     console.log("==================");
     console.log(options.callGasLimit);
   }
+
 
   if (options.fork) {
     console.log("");
@@ -242,4 +282,44 @@ function startGanache(err, result) {
   console.log("Listening on " + options.hostname + ":" + options.port);
 }
 
-server.listen(options.port, options.hostname, startGanache);
+
+
+async function runDevChainFromTar(filename) {
+  const chainCopy = tmp.dirSync({ keep: false, unsafeCleanup: true });
+
+  function decompressChain(tarPath, copyChainPath) {
+      return new Promise((resolve, reject) => {
+          targz.decompress({ src: tarPath, dest: copyChainPath }, (err) => {
+              if (err) {
+                  console.error(err);
+                  reject(err);
+              } else {
+                  console.log('Chain decompressed');
+                  resolve();
+              }
+          });
+      });
+  }
+
+  await decompressChain(options.db_path_tar, chainCopy.name);
+  options.db_path = chainCopy.name;
+}
+
+async function compressChain(chainPath, filename) {
+  console.log('Compressing chain');
+
+  return new Promise((resolve, reject) => {
+      // ensures the path to the file
+      fs.ensureFileSync(filename);
+
+      targz.compress({ src: chainPath, dest: filename }, async (err) => {
+          if (err) {
+              console.error(err);
+              reject(err);
+          } else {
+              console.log('Chain compressed');
+              resolve();
+          }
+      });
+  });
+}
