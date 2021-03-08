@@ -118,6 +118,7 @@ var options = {
 };
 
 async function startGanache() {
+  // db_path_tar is set to 'devchain.tar.gz' by default. Running the devchain from this tar file will include all of the Celo contracts.
   if (options.db_path_tar) {
     await runDevChainFromTar(options.db_path_tar);
   }
@@ -183,6 +184,7 @@ async function startedGanache(err, result) {
   var ethInWei = new BN('1000000000000000000');
 
   // Celo protocol contracts import
+  // ContractKit was added to get cGLD and cUSD balance
   const kit = ContractKit.newKit(`http://${options.hostname}:${options.port}`);
   const goldtoken = await kit.contracts.getGoldToken();
   const stabletoken = await kit.contracts.getStableToken();
@@ -282,6 +284,7 @@ async function startedGanache(err, result) {
   console.log('Listening on ' + options.hostname + ':' + options.port);
 }
 
+// Decompress a given tar.gz chain add the path to 'options.db_path'
 async function runDevChainFromTar(filename) {
   const chainCopy = tmp.dirSync({ keep: false, unsafeCleanup: true });
 
@@ -303,6 +306,7 @@ async function runDevChainFromTar(filename) {
   options.db_path = chainCopy.name;
 }
 
+// Compress a chain into a tar.gz file and save it in project's root folder
 async function compressChain(chainPath, filename) {
   console.log('Compressing chain');
 
