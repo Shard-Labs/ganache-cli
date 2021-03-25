@@ -110,6 +110,7 @@ var options = {
   logger: logger,
   allowUnlimitedContractSize: argv.allowUnlimitedContractSize,
   useExperimentalOpcodes: argv.useExperimentalOpcodes,
+  minimumGasPrice: argv.minimumGasPrice,
   time: argv.t,
   keepAliveTimeout: argv.keepAliveTimeout,
   _chainId: argv.chainId,

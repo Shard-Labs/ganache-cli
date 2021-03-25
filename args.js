@@ -177,6 +177,12 @@ module.exports = exports = function (yargs, version, isDocker) {
       type: 'number',
       default: 0,
     })
+    .option('minimumGasPrice', {
+      group: 'Chain:',
+      describe: 'The minimum gas price for executing transactions',
+      type: 'number',
+      default: 100000000,
+    })
     .option('gpfcr', {
       group: 'Chain:',
       alias: 'gasPriceFeeCurrencyRatio',
