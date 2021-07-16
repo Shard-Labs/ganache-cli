@@ -221,7 +221,7 @@ async function startedGanache(err, result) {
   console.log('==================');
 
   addresses.forEach(function (address, index) {
-    console.log('(' + index + ') ' + '0x' + accounts[address].secretKey.toString('hex'));
+    console.log(`(${index+1}) 0x${accounts[address].secretKey.toString('hex')}`);
   });
 
   if (options.account_keys_path != null) {

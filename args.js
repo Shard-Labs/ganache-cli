@@ -175,7 +175,7 @@ module.exports = exports = function (yargs, version, isDocker) {
       alias: 'gasPrice',
       describe: 'The price of gas in wei',
       type: 'number',
-      default: 0,
+      default: 20000000000,
     })
     .option('minimumGasPrice', {
       group: 'Chain:',
